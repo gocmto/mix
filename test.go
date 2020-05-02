@@ -24,6 +24,7 @@ func main() {
 	xmlFile, err := os.Open("test_config.xml")
 	if err != nil {
 		writeLog(err)
+		os.Exit(1)
 	}
 
 	defer xmlFile.Close()
@@ -39,6 +40,7 @@ func main() {
 	_, er := os.Stat(path)
 	if er != nil {
 		writeLog(er)
+		os.Exit(2)
 	}
 
 	readAllDir(path)
