@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -22,7 +23,7 @@ type Config struct {
 func main() {
 	xmlFile, err := os.Open("test_config.xml")
 	if err != nil {
-		fmt.Println(err)
+		writeLog(err)
 	}
 
 	defer xmlFile.Close()
@@ -35,31 +36,47 @@ func main() {
 	path := root.Config.Path
 	fmt.Println("path: ", path)
 
+	_, er := os.Stat(path)
+	if er != nil {
+		writeLog(er)
+	}
+
 	readAllDir(path)
 
 	targetFile := filepath.Join(path, "test_result.txt")
 
+	formatted := getNowDate()
+
+	data := []byte("This content created at: " + formatted)
+	e := ioutil.WriteFile(targetFile, data, 0644)
+	if e != nil {
+		writeLog(e)
+	}
+}
+
+func getNowDate() string {
 	time := time.Now()
 	formatted := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
 		time.Year(), time.Month(), time.Day(),
 		time.Hour(), time.Minute(), time.Second())
 
-	data := []byte("This content created at: " + formatted)
-	e := ioutil.WriteFile(targetFile, data, 0644)
-	if e != nil {
-		fmt.Println(err)
-	}
+	return formatted
+}
+
+func writeLog(err error)  {
+	e := err.Error()
+	filename := os.Args
+	fn := filepath.Base(filename[0])
+	fnm := strings.Replace(fn, ".exe", "",4) + ".log"
+	f, _ := os.OpenFile(fnm, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	output := fmt.Sprintf("%s: %s \n", getNowDate(), e)
+	f.WriteString(output)
 }
 
 func readAllDir(path string) {
-	_, er := os.Stat(path)
-	if er != nil {
-		fmt.Println(er)
-	}
-
 	c, err := ioutil.ReadDir(path)
 	if err != nil {
-		fmt.Println(err)
+		writeLog(err)
 	}
 
 	for _, entry := range c {
